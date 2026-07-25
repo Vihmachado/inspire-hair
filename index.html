@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspira Hair</title>
+    <link rel="stylesheet" href="style.css"> 
+    <script src="script.js"></script>
+</head>
+<body>
+
+    <img src="img/top-right.svg" class="leaf leaf-top-right">
+    <img src="img/bottom-left.svg" class="leaf leaf-bottom-left">
+
+    <div class="page">
+        <div id="cabecalho">
+            <h1 class="title">VEJA SUA PRÓXIMA TRANSFORMAÇÃO EM VOCÊ</h1>
+            <p class="subtitle">Experimente sua inspiração em tempo real e escolha com mais confiança.</p>
+        </div>
+
+        <div class="camera">
+            <video id="camVideo" autoplay muted playsinline></video>
+            <img id="camFallback" class="fallback-img" style="display:none;" alt="" src="">
+            <div class="btn-cam">
+                <img src="img/Button.svg" alt="buttonCam">
+            </div>
+            <p class="cam-text">Posicione seu rosto e cabelo<br>dentro da câmera.</p>
+        </div>
+
+        <p class="status-cam-text">Escolha uma inspiração para começar.</p>
+        
+        <div class="actions">
+            <button class="btn-clear" type="button">LIMPAR</button>
+            <button class="btn-main" type="button">
+           <img src="img/sparkle.svg" alt="sparkleIcon" id="icon">ESCOLHER INSPIRAÇÃO</button>
+        </div>
+    <footer>by @vihmachado.s</footer>
+    </div>
+</body>
+</html>
