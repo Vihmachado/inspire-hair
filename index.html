@@ -21,9 +21,11 @@
         <div class="camera">
             <video id="camVideo" autoplay muted playsinline></video>
             <img id="camFallback" class="fallback-img" style="display:none;" alt="" src="">
+           <!-- *No momento não utilizar o botão da câmera*
             <div class="btn-cam">
                 <img src="img/Button.svg" alt="buttonCam">
             </div>
+            --> 
             <p class="cam-text">Posicione seu rosto e cabelo<br>dentro da câmera.</p>
         </div>
 
@@ -31,8 +33,12 @@
         
         <div class="actions">
             <button class="btn-clear" type="button">LIMPAR</button>
-            <button class="btn-main" type="button">
-           <img src="img/sparkle.svg" alt="sparkleIcon" id="icon">ESCOLHER INSPIRAÇÃO</button>
+
+            <label class="choose-img" tabindex="0">
+                <input type="file" accept="image/*" id="img-insp"/>
+                <span class="btn-main"><img src="img/sparkle.svg" alt="sparkleIcon" id="icon">ESCOLHER INSPIRAÇÃO</span>
+            </label>
+
         </div>
     <footer>by @vihmachado.s</footer>
     </div>

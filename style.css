@@ -84,10 +84,8 @@
   }
 
   .subtitle{
-    font-family: var(--text);
     font-size: 18px;
     font-weight: 200;
-    color: var(--white-color);
     opacity: .80;
     margin: 5px;
   }
@@ -120,15 +118,15 @@
     pointer-events:none;
 
   }
-
+/*
   .camera .btn-cam img{
     width: 60px;
     height: 60px;
     position: absolute;
     bottom: 7%;
     left: 45%;
-
   }
+*/
 
  .camera .cam-text{
     position: absolute;
@@ -186,14 +184,20 @@
     color: var(--primary-color);
     font-weight: 600;
     font-size: 14px;
-    border: none;
     border-radius: 10px;
     padding: 13px 20px;
     width: 320px;
+    cursor: pointer;
   }
-  
+
+  #img-insp{ /*id input - remover o estilo pré-definido*/
+    display: none;
+  }
+
+
   .btn-main:hover{
-    background-color: #f5ebe9e7;
+    background-color: #f7f3f2e7;
+    box-shadow: inset 0px 2px 2px #291510bd;
   }
   
   .btn-main img{
