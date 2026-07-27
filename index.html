@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inspira Hair</title>
     <link rel="stylesheet" href="style.css"> 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
 </head>
 <body>
 
@@ -20,6 +20,7 @@
 
         <div class="camera">
             <video id="camVideo" autoplay muted playsinline></video>
+            <canvas id="outputCanvas"></canvas><!--O canvas é a camada que a IA vai utilizar para adicionar o filtro no vídeo-->
             <img id="camFallback" class="fallback-img" style="display:none;" alt="" src="">
            <!-- *No momento não utilizar o botão da câmera*
             <div class="btn-cam">
