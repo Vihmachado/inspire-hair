@@ -1,24 +1,33 @@
+// 1. Importações
 import { ImageSegmenter, FilesetResolver } from "@mediapipe/tasks-vision";
+
+// Variáveis Globais do Projeto
+let segmenter;
+let corInspiracao = null; // Começa sem filtro
+let lastVideoTime = -1;
 
 const videoElement = document.querySelector("#camVideo");
 const canvasElement = document.querySelector("#outputCanvas");
 const canvasCtx = canvasElement.getContext("2d");
 
-let segmenter;
-let corInspiracao = null; // Começa sem filtro no início.
-
-// 1. Ligar a câmera
+// 2. Ligar a Câmera
 async function startVideoFromCamera() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
         videoElement.srcObject = stream;
-        console.log("Câmera conectada!");
+        
+        // Aguarda o vídeo carregar as dimensões reais para ajustar o canvas
+        return new Promise((resolve) => {
+            videoElement.onloadedmetadata = () => {
+                resolve();
+            };
+        });
     } catch (error) {
         console.error("Erro na câmera:", error);
     }
 }
 
-// 2. Inicializar IA
+// 3. Inicializar a IA do MediaPipe
 async function initMediaPipe() {
     const vision = await FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
@@ -32,12 +41,10 @@ async function initMediaPipe() {
         runningMode: "VIDEO",
         outputCategoryMask: true,
     });
-    console.log("IA pronta!");
+    console.log("IA do Inspire Hair pronta!");
 }
 
-// 3. Loop de Renderização Inteligente
-let lastVideoTime = -1;
-
+// 4. Loop de Renderização Inteligente e Realista
 function renderLoop() {
     canvasElement.width = videoElement.videoWidth;
     canvasElement.height = videoElement.videoHeight;
@@ -47,65 +54,84 @@ function renderLoop() {
         const startTimeMs = performance.now();
         
         segmenter.segmentForVideo(videoElement, startTimeMs, (result) => {
-            // Limpa o canvas sempre
-            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
             
-            // REGRA: Se a usuária NÃO escolheu nenhuma inspiração ainda, não desenha nada!
-            if (!corInspiracao) {
+            // Se a usuária NÃO escolheu cor, limpamos o canvas (deixa transparente).
+            if (!corInspiracao || !result.categoryMask) {
+                canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
                 return; 
             }
 
-            // Se ela já escolheu a inspiração, aplicamos o filtro de cor suave
-            if (result.categoryMask) {
-                const mask = result.categoryMask.getAsUint8Array();
-                const imageData = canvasCtx.createImageData(canvasElement.width, canvasElement.height);
-                const pixels = imageData.data;
-                
-                // Mapeia o cabelo com a cor extraída da inspiração
-                for (let i = 0; i < mask.length; i++) {
-                    if (mask[i] === 1) {
-                        pixels[i * 4] = corInspiracao.r;     
-                        pixels[i * 4 + 1] = corInspiracao.g; 
-                        pixels[i * 4 + 2] = corInspiracao.b; 
-                        pixels[i * 4 + 3] = 130; // Transparência ideal para parecer tintura real
-                    }
+            // 1. Se ela escolheu a cor, desenhamos o vídeo original no canvas primeiro.
+            canvasCtx.save();
+            canvasCtx.globalCompositeOperation = 'source-over';
+            canvasCtx.globalAlpha = 1.0;
+            canvasCtx.filter = 'none';
+            canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+            canvasCtx.restore();
+
+            // 2. Extração da máscara de cabelo
+            const mask = result.categoryMask.getAsUint8Array();
+            
+            // Criamos um canvas invisível apenas para gerar a "tinta"
+            const maskCanvas = document.createElement('canvas');
+            maskCanvas.width = canvasElement.width;
+            maskCanvas.height = canvasElement.height;
+            const maskCtx = maskCanvas.getContext('2d');
+            
+            const imageData = maskCtx.createImageData(maskCanvas.width, maskCanvas.height);
+            const pixels = imageData.data;
+            
+            // Pintamos a cor desejada apenas onde o MediaPipe identificou cabelo
+            for (let i = 0; i < mask.length; i++) {
+                if (mask[i] === 1) { // 1 = Área do Cabelo
+                    pixels[i * 4] = corInspiracao.r;     
+                    pixels[i * 4 + 1] = corInspiracao.g; 
+                    pixels[i * 4 + 2] = corInspiracao.b; 
+                    pixels[i * 4 + 3] = 255; // Opacidade total nesta etapa
+                } else {
+                    pixels[i * 4 + 3] = 0; // Transparente onde não é cabelo
                 }
-
-                // Cria um canvas temporário para suavizar as bordas (evita o efeito recortado/marcado)
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = canvasElement.width;
-                tempCanvas.height = canvasElement.height;
-                const tempCtx = tempCanvas.getContext('2d');
-                tempCtx.putImageData(imageData, 0, 0);
-
-                canvasCtx.save();
-                canvasCtx.globalCompositeOperation = 'multiply'; // Mescla com o brilho e mechas reais do cabelo
-                canvasCtx.filter = 'blur(5px)';   // Suaviza o contorno para não cortar a pele
-                canvasCtx.drawImage(tempCanvas, 0, 0);
-                canvasCtx.restore();
             }
+            maskCtx.putImageData(imageData, 0, 0);
+
+            // 3. Aplicação Realista no Canvas Principal
+            canvasCtx.save();
+            
+            // 'color' muda a cor, mas mantém a textura, os brilhos e as sombras originais
+            canvasCtx.globalCompositeOperation = 'color';
+            canvasCtx.filter = 'blur(6px)'; 
+            canvasCtx.globalAlpha = 0.80; 
+            canvasCtx.drawImage(maskCanvas, 0, 0);
+            
+            // Camada 'overlay' para devolver um pouco de profundidade e brilho extra
+            canvasCtx.globalCompositeOperation = 'overlay';
+            canvasCtx.globalAlpha = 0.15;
+            canvasCtx.drawImage(maskCanvas, 0, 0);
+            
+            canvasCtx.restore();
         });
     }
 
     window.requestAnimationFrame(renderLoop);
 }
 
+// 5. Inicialização Geral do Aplicativo
 async function startApp() {
     await startVideoFromCamera();
     await initMediaPipe();
     renderLoop(); 
 }
 
-startApp();
+window.addEventListener("DOMContentLoaded", startApp);
 
-// Botão Limpar: Remove a cor e deixa o vídeo limpo de novo
+// 6. Botão Limpar: Remove a cor e limpa o canvas
 document.querySelector('.btn-clear').addEventListener('click', () => {
     corInspiracao = null;
     canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     console.log('Filtro limpo - Câmera limpa');
 });
 
-// Leitura da Imagem de Inspiração: Extrai apenas a cor predominante da foto enviada
+// 7. Leitura da Imagem de Inspiração: Extrai a cor predominante
 document.querySelector('#img-insp').addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (file) {
